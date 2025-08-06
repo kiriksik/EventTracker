@@ -5,6 +5,7 @@ go 1.24.1
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.1
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/prometheus/client_golang v1.23.0
 	github.com/segmentio/kafka-go v0.4.48
 	go.uber.org/zap v1.27.0

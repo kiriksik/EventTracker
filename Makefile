@@ -6,6 +6,7 @@ help:
 	@echo ""
 	@echo "Цели:"
 	@echo "  help           - Показать эту справку (цель по умолчанию)"
+	@echp "  create-topic   - Создать топик events для Kafka"
 	@echo "  up             - Запустить все сервисы (docker-compose up -d)"
 	@echo "  down           - Остановить все сервисы (docker-compose down)"
 	@echo "  restart        - Перезапустить сервисы (down + up)"
@@ -22,9 +23,16 @@ help:
 	@echo "  make up"
 	@echo "  make logs"
 
+# Создать топик events в Kafka (если его нет)
+create-topic:
+	docker-compose exec kafka kafka-topics --bootstrap-server localhost:9092 --create --topic events --partitions 1 --replication-factor 1 || echo "Topic already exists or error"
+
+
 # Запуск всех сервисов
 up:
 	docker-compose up -d
+	sleep 10
+	make create-topic
 
 # Остановка всех сервисов
 down:

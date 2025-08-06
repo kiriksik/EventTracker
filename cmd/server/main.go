@@ -11,6 +11,7 @@ import (
 
 	"github.com/kiriksik/EventTracker/internal/configs"
 	"github.com/kiriksik/EventTracker/internal/delivery/rest"
+	"github.com/kiriksik/EventTracker/internal/delivery/ws"
 	"github.com/kiriksik/EventTracker/internal/infrastructure/clickhouse"
 	"github.com/kiriksik/EventTracker/internal/infrastructure/kafka"
 	"github.com/kiriksik/EventTracker/internal/telemetry"
@@ -50,11 +51,13 @@ func main() {
 	defer kafkaPublisher.Close()
 
 	eventRepo := clickhouse.NewEventRepository(db, logger)
-	eventUC := usecase.NewEventUseCase(eventRepo, kafkaPublisher)
+	eventUC := usecase.NewEventUseCase(eventRepo, kafkaPublisher, logger)
 
-	// 5. Создание REST API
+	// 5. Создание REST API и WebSocket
 	handler := rest.NewEventHandler(eventUC, logger)
 	mux := http.NewServeMux()
+	wsHandler := ws.NewHandler(eventUC, metrics, logger)
+	mux.HandleFunc("/ws", wsHandler.Handle)
 	handler.RegisterRoutes(mux)
 
 	srv := &http.Server{Addr: fmt.Sprintf(":%v", cfg.HTTP.Port), Handler: mux}

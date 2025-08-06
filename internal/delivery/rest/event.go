@@ -3,10 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
-	"github.com/google/uuid"
-	"github.com/kiriksik/EventTracker/internal/domain/entity"
 	"github.com/kiriksik/EventTracker/internal/usecase"
 	"go.uber.org/zap"
 )
@@ -30,26 +27,19 @@ func (h *EventHandler) HandleIncomingEvent(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var input struct {
-		Type    string `json:"type"`
-		Payload string `json:"payload"`
+	var event struct {
+		Type      string                 `json:"type"`
+		Timestamp int64                  `json:"timestamp"`
+		Payload   map[string]interface{} `json:"payload"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+		http.Error(w, "invalid input", http.StatusBadRequest)
 		return
 	}
 
-	event := &entity.Event{
-		ID:        uuid.New().String(),
-		Type:      input.Type,
-		Payload:   input.Payload,
-		Timestamp: time.Now(),
-	}
-
-	if err := h.usecase.HandleEvent(event); err != nil {
-		h.logger.Error("failed to handle event", zap.Error(err))
-		http.Error(w, "Internal error", http.StatusInternalServerError)
+	if err := h.usecase.ProcessEvent(r.Context(), event.Type, event.Timestamp, event.Payload); err != nil {
+		http.Error(w, "failed to process event", http.StatusInternalServerError)
 		return
 	}
 

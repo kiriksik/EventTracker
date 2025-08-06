@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Config struct {
+type ServerConfig struct {
 	ServiceName string        `yaml:"serviceName"`
 	HTTP        HTTPConfig    `yaml:"http"`
 	Kafka       KafkaConfig   `yaml:"kafka"`
@@ -18,11 +18,6 @@ type HTTPConfig struct {
 	Port int `yaml:"port"`
 }
 
-type KafkaConfig struct {
-	Brokers []string `yaml:"brokers"`
-	Topic   string   `yaml:"topic"`
-}
-
 type ClickHouseCfg struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
@@ -31,23 +26,17 @@ type ClickHouseCfg struct {
 	Database string `yaml:"database"`
 }
 
-type TelemetryCfg struct {
-	JaegerURL string `yaml:"jaegerURL"`
-}
-
-func LoadConfig(path string) (*Config, error) {
+func LoadServerConfig(path string) (*ServerConfig, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
+	var cfg ServerConfig
 	decoder := yaml.NewDecoder(file)
-
-	var cfg Config
 	if err := decoder.Decode(&cfg); err != nil {
 		return nil, err
 	}
-
 	return &cfg, nil
 }
